@@ -16,15 +16,8 @@ import java.net.Socket;
 public class Client {
 	public static void main(String[] args) throws Exception{
 		Socket client = new Socket("localhost",9999);
-		BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
-		System.out.println("«Î ‰»Î’À∫≈");
-		String id = console.readLine();
-		System.out.println("«Î ‰»Î√‹¬Î");
-		String pwd = console.readLine();
-		String msg = id+"&"+pwd;
-		System.out.println(msg);
-		
-		
-		client.close();
+		new Thread(new Send(client)).start();
+		new Thread(new Receive(client)).start();
+//		client.close();
 	}
 }

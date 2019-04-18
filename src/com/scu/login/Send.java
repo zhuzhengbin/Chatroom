@@ -1,7 +1,10 @@
 package com.scu.login;
 
-import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.Closeable;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.Socket;
 
 /**
@@ -13,15 +16,18 @@ import java.net.Socket;
 public class Send implements Runnable {
 	// 关联的TCP连接
 	private Socket client = null;
-	private BufferedOutputStream bos = null;
+	private BufferedReader console;
+	private DataOutputStream dos;
 	
-	public Send() {
+	
+	public Send() {	// 空构造器
 	}
 	
 	public Send(Socket client) {
 		this.client = client;
 		try {
-			bos = new BufferedOutputStream(this.client.getOutputStream());
+			console = new BufferedReader(new InputStreamReader(System.in));
+			dos = new DataOutputStream(client.getOutputStream());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -30,7 +36,30 @@ public class Send implements Runnable {
 
 	@Override
 	public void run() {
-		
+		System.out.println("请输入账号:");
+		try {
+			String id = console.readLine();
+			System.out.println("请输入密码:");
+			String pwd = console.readLine();
+			String msg = id+"&"+pwd;
+			dos.writeUTF(msg);
+			dos.flush();
+//			close(client);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+	}
+	
+	private void close(Closeable... targets) {
+		for(Closeable target:targets) {
+			if(target != null) {
+				try {
+					target.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 	
 	
