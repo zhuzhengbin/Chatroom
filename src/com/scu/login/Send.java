@@ -18,38 +18,42 @@ public class Send implements Runnable {
 	private Socket client = null;
 	private BufferedReader console;
 	private DataOutputStream dos;
-	
-	
+	private boolean isRunning;
+
+
 	public Send() {	// ø’ππ‘Ï∆˜
 	}
-	
+
 	public Send(Socket client) {
 		this.client = client;
+		this.isRunning = true;
 		try {
 			console = new BufferedReader(new InputStreamReader(System.in));
 			dos = new DataOutputStream(client.getOutputStream());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 	}
 
 	@Override
 	public void run() {
-		System.out.println("«Î ‰»Î’À∫≈:");
-		try {
-			String id = console.readLine();
-			System.out.println("«Î ‰»Î√‹¬Î:");
-			String pwd = console.readLine();
-			String msg = id+"&"+pwd;
-			dos.writeUTF(msg);
-			dos.flush();
-//			close(client);
-		} catch (IOException e1) {
-			e1.printStackTrace();
+		while(isRunning) {
+			try {
+				System.out.println("«Î ‰»Î’À∫≈:");
+				String id = console.readLine();
+				System.out.println("«Î ‰»Î√‹¬Î:");
+				String pwd = console.readLine();
+				String msg = id+"&"+pwd;
+				dos.writeUTF(msg);
+				dos.flush();
+				//			close(client);
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
 		}
 	}
-	
+
 	private void close(Closeable... targets) {
 		for(Closeable target:targets) {
 			if(target != null) {
@@ -61,7 +65,7 @@ public class Send implements Runnable {
 			}
 		}
 	}
-	
-	
-	
+
+
+
 }

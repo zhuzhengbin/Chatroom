@@ -5,6 +5,10 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 /**
  * 服务器端：负责接收来自客户端的消息，进行简单处理（判断登陆的账号密码是否正确）后反馈给客户端
@@ -13,6 +17,7 @@ import java.net.Socket;
  */
 public class Server {
 	public static void main(String[] args) throws Exception {
+		System.out.println("---------------------------------服务器---------------------------------");
 		ServerSocket server = new ServerSocket(9999);
 		boolean isRunning = true;
 		while(isRunning) {
@@ -27,13 +32,13 @@ public class Server {
 		private Socket client;
 		private DataInputStream dis;
 		private DataOutputStream dos;
-//		private boolean isRunning;
+		private boolean isRunning;
 		
 		Channel(){
 		}
 		public Channel(Socket client) {
 			this.client = client;
-//			this.isRunning = true;
+			this.isRunning = true;
 			try {
 				dis = new DataInputStream(client.getInputStream());
 				dos = new DataOutputStream(client.getOutputStream());
@@ -63,13 +68,47 @@ public class Server {
 			}
 		}
 		
+		public boolean isLegal(String msg) {
+			String[] info = msg.split("&");
+			String uname = info[0];
+			String upwd = info[1];
+			// 从数据库中查询uname为uname的记录，比较upwd是否相等
+			Connection conn = JDBCUtil.getMysqlConn();
+			String sql = "select upwd from userinfo where uname=?";
+			try {
+				PreparedStatement ps = conn.prepareStatement(sql);
+				ps.setString(1,uname);
+				ResultSet rs = ps.executeQuery();
+				while(rs.next()) {
+					if(rs.getString("upwd").equals(upwd)) {
+						return true;
+					}else {
+						return false;
+					}
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+				return false;
+			}
+			return false;
+		}
+		
 		
 		@Override
 		public void run() {
-//			while(isRunning) {
-				String msg = receive();
-				send(msg);
-//			}
+			while(isRunning) {
+				String msg = receive();	// 消息的格式是uname&upwd
+//				String[] info = msg.split("&");
+//				String uname = info[0];
+//				String upwd = info[1];
+				boolean flag = isLegal(msg);
+				if(flag) {
+					send("欢迎您！");
+				}else {
+					send("对不起，您的账号或密码不正确！");
+				}
+				
+			}
 		}
 		
 	}

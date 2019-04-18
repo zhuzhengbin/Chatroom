@@ -13,12 +13,14 @@ import java.net.Socket;
 public class Receive implements Runnable{
 	private Socket client;	// 一条客户端与服务器的TCP连接
 	private DataInputStream dis;
-	
+	private boolean isRunning;
+
 	public Receive() {
 	}
-	
+
 	public Receive(Socket client) {
 		this.client = client;
+		this.isRunning = true;
 		try {
 			dis = new DataInputStream(client.getInputStream());
 		} catch (IOException e) {
@@ -28,15 +30,16 @@ public class Receive implements Runnable{
 
 	@Override
 	public void run() {
-		try {
-			String msg = dis.readUTF();
-			System.out.println(msg);
-//			close(client);
-		} catch (IOException e) {
-			e.printStackTrace();
+		while(isRunning) {
+			try {
+				String msg = dis.readUTF();
+				System.out.println(msg);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
-	
+
 	private void close(Closeable... targets) {
 		for(Closeable target:targets) {
 			if(target != null) {
@@ -48,6 +51,6 @@ public class Receive implements Runnable{
 			}
 		}
 	}
-	
-	
+
+
 }
