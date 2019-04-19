@@ -68,8 +68,11 @@ public class Server {
 			}
 		}
 
-		private void sendToOthers() {	// 把一个客户发过来的消息转发给连接到服务器的其它用户
-
+		private void sendToOthers(String msg) {	// 把一个客户发过来的消息转发给连接到服务器的其它用户
+			// 遍历容器，向容器中的所有用户发送消息
+			for(Channel ch:connList) {
+				ch.send(msg);
+			}
 
 		}
 
@@ -82,7 +85,7 @@ public class Server {
 			}
 		}
 
-		public boolean isLegal(String msg) {
+		public boolean isLegal(String msg) {	// 判断登陆用户是否合法
 			String[] info = msg.split("&");
 			String uname = info[0];
 			String upwd = info[1];
@@ -120,7 +123,8 @@ public class Server {
 			}
 			while(isRunning) {	// 循环接收来自客户端的消息，并将其转发
 				msg = receive();	// 读取来自客户端的消息
-				send(msg);  // 发送会原客户端
+//				send(msg);  // 发送回原客户端
+				sendToOthers(msg); // 向其它客户端发送消息
 			}
 		}
 
