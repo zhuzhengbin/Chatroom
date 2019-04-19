@@ -36,20 +36,33 @@ public class Send implements Runnable {
 
 	}
 
+	private void login() {	// 输入账号和密码，进行登陆
+		try {
+			System.out.println("请输入账号:");
+			String id = console.readLine();
+			System.out.println("请输入密码:");
+			String pwd = console.readLine();
+			String msg = id+"&"+pwd;
+			dos.writeUTF(msg);
+			dos.flush();
+			//			close(client);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+	}
+
 	@Override
 	public void run() {
+		// 第一次向服务器发送，用于登陆
+		login();
+		// 循环从控制台获得信息，并发送到服务器
 		while(isRunning) {
 			try {
-				System.out.println("请输入账号:");
-				String id = console.readLine();
-				System.out.println("请输入密码:");
-				String pwd = console.readLine();
-				String msg = id+"&"+pwd;
+				String msg = console.readLine();
 				dos.writeUTF(msg);
 				dos.flush();
-				//			close(client);
-			} catch (IOException e1) {
-				e1.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 	}

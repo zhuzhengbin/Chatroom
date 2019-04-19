@@ -9,31 +9,40 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * 服务器端：负责接收来自客户端的消息，进行简单处理（判断登陆的账号密码是否正确）后反馈给客户端
+ * 服务器端
+ * 目标：
+ * 将用户发来的消息转发给其它用户
  * @author zhuzhengbin
  *
  */
 public class Server {
+	private static List<Channel> connList = new ArrayList<>();
 	public static void main(String[] args) throws Exception {
 		System.out.println("---------------------------------服务器---------------------------------");
 		ServerSocket server = new ServerSocket(9999);
 		boolean isRunning = true;
 		while(isRunning) {
 			Socket client = server.accept();
-			// 新建一个线程，用以处理这个连接上的接收与发送
-			new Thread(new Channel(client)).start();
+			// 创建一个用户连接
+			Channel channel = new Channel(client);
+			// 将连接保存到连接池
+			connList.add(channel);
+			// 为新连接创建线程
+			new Thread(channel).start();
 		}
 	}
-	
+
 	// 接收连接
 	static class Channel implements Runnable{
 		private Socket client;
 		private DataInputStream dis;
 		private DataOutputStream dos;
 		private boolean isRunning;
-		
+
 		Channel(){
 		}
 		public Channel(Socket client) {
@@ -46,8 +55,8 @@ public class Server {
 				e.printStackTrace();
 			}
 		}
-		
-		
+
+
 		private String receive() {	// 从TCP连接中接收消息
 			String msg = "";
 			try {
@@ -58,7 +67,12 @@ public class Server {
 				return msg;
 			}
 		}
-		
+
+		private void sendToOthers() {	// 把一个客户发过来的消息转发给连接到服务器的其它用户
+
+
+		}
+
 		private void send(String msg) {
 			try {
 				dos.writeUTF(msg);
@@ -67,7 +81,7 @@ public class Server {
 				e.printStackTrace();
 			}
 		}
-		
+
 		public boolean isLegal(String msg) {
 			String[] info = msg.split("&");
 			String uname = info[0];
@@ -92,24 +106,23 @@ public class Server {
 			}
 			return false;
 		}
-		
-		
+
+
 		@Override
 		public void run() {
-			while(isRunning) {
-				String msg = receive();	// 消息的格式是uname&upwd
-//				String[] info = msg.split("&");
-//				String uname = info[0];
-//				String upwd = info[1];
-				boolean flag = isLegal(msg);
-				if(flag) {
-					send("欢迎您！");
-				}else {
-					send("对不起，您的账号或密码不正确！");
-				}
-				
+			// 第一次接收消息，用于判断用户的合法性
+			String msg = receive();	// 消息的格式是uname&upwd
+			boolean flag = isLegal(msg);
+			if(flag) {
+				send("欢迎您！");
+			}else {
+				send("对不起，您的账号或密码不正确！");
+			}
+			while(isRunning) {	// 循环接收来自客户端的消息，并将其转发
+				msg = receive();	// 读取来自客户端的消息
+				send(msg);  // 发送会原客户端
 			}
 		}
-		
+
 	}
 }
