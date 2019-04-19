@@ -42,6 +42,7 @@ public class Server {
 		private DataInputStream dis;
 		private DataOutputStream dos;
 		private boolean isRunning;
+		private String name;	// 连接者的名字
 
 		Channel(){
 		}
@@ -69,9 +70,26 @@ public class Server {
 		}
 
 		private void sendToOthers(String msg) {	// 把一个客户发过来的消息转发给连接到服务器的其它用户
-			// 遍历容器，向容器中的所有用户发送消息
-			for(Channel ch:connList) {
-				ch.send(msg);
+			// 对输入信息进行判断，看是否为私聊(私聊消息的格式为@xxx:msg)
+			if(msg.startsWith("@")) {	// 如果是私聊，则只向目标客户端发送消息
+				int index = msg.indexOf(":");	// 找到“:”的索引位置
+				String uname = msg.substring(1,index);	// 获取@对象的名称
+				// 遍历容器，查找目标对象
+				for(Channel ch:connList) { 
+					if(uname.equals(ch.getName())) {
+						ch.send(this.name+"悄悄对您说："+msg);	// 向该目标发送消息并退出循环
+						break;
+					}
+					
+				}
+			}else {
+				for(Channel ch:connList) { // 如果不是私聊，则遍历容器，向容器中的所有非己方用户发送消息
+					if(ch == this) {	// 如果是自己，就跳过，进入下一次循环
+						continue;
+					}
+					// 如果不是自己，就向其发送消息
+					ch.send(this.name+"对大家说："+msg);
+				}
 			}
 
 		}
@@ -98,6 +116,7 @@ public class Server {
 				ResultSet rs = ps.executeQuery();
 				while(rs.next()) {
 					if(rs.getString("upwd").equals(upwd)) {
+						this.name = uname;
 						return true;
 					}else {
 						return false;
@@ -109,7 +128,7 @@ public class Server {
 			}
 			return false;
 		}
-
+		
 
 		@Override
 		public void run() {
@@ -123,10 +142,18 @@ public class Server {
 			}
 			while(isRunning) {	// 循环接收来自客户端的消息，并将其转发
 				msg = receive();	// 读取来自客户端的消息
-//				send(msg);  // 发送回原客户端
+				//				send(msg);  // 发送回原客户端
 				sendToOthers(msg); // 向其它客户端发送消息
 			}
 		}
+		public String getName() {
+			return name;
+		}
+		public void setName(String name) {
+			this.name = name;
+		}
+		
+		
 
 	}
 }

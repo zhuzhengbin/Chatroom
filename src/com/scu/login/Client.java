@@ -3,11 +3,9 @@ package com.scu.login;
 import java.net.Socket;
 
 /**
- * 项目简介：
- * 使用数据库、多线程、socket相关知识实现用户的远程登陆，可以在服务端判断登陆是否成功
  * 
  * 目标：
- * 1、实现从客户端输入账号密码，在服务器端判断是否正确并返回结果
+ * 1、实现私聊
  * @author zhuzhengbin
  *
  */
